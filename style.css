@@ -2,15 +2,20 @@ body {
     font: 10px sans-serif;
 }
 
-text {
-    fill: #000;
+.jumbotron {
+    margin-top: 10%;
+    margin-right: 2%;
+    margin-bottom: 0;
+    margin-left: 2%;
 }
 
 button {
-    position: absolute;
-    right: 20px;
-    top: 440px;
-    display: none;
+  margin: 0 auto;
+
+}
+
+text {
+    fill: #000;
 }
 
 path.ohlc {
@@ -24,4 +29,9 @@ path.ohlc.up {
 
 path.ohlc.down {
     stroke: #FF0000;
+}
+rect.pane {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
 }
