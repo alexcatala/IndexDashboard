@@ -10,8 +10,7 @@ body {
 }
 
 button {
-  margin: 0 auto;
-
+    margin: 0 auto;
 }
 
 text {
@@ -30,8 +29,22 @@ path.ohlc.up {
 path.ohlc.down {
     stroke: #FF0000;
 }
+
 rect.pane {
     cursor: move;
     fill: none;
     pointer-events: all;
+}
+
+.crosshair {
+    cursor: crosshair;
+}
+
+.crosshair path.wire {
+    stroke: #DDDDDD;
+    stroke-dasharray: 1, 1;
+}
+
+.crosshair .axisannotation path {
+    fill: #DDDDDD;
 }
