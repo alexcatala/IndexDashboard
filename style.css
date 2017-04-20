@@ -25,3 +25,9 @@ svg {
 .line {
   fill: none;
 }
+
+.brush .extent {
+    stroke: #fff;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}

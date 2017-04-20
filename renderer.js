@@ -48,17 +48,10 @@ function drawChart(path) {
         .x(x2)
         .on("brush", brush);
 
-    var line = d3.svg.line()
-        .defined(function(d) {
-            return !isNaN(d.temperature);
-        })
-        .interpolate("cubic")
-        .x(function(d) {
-            return x(d.date);
-        })
-        .y(function(d) {
-            return y(d.temperature);
-        });
+    var xAxis = d3.axisBottom(x);
+    //var xTopAxis = d3.axisTop(x);
+    var yAxis = d3.axisLeft(y);
+    //var yRightAxis = d3.axisRight(y);
 
     var line2 = d3.svg.line()
         .defined(function(d) {
@@ -72,7 +65,14 @@ function drawChart(path) {
             return y2(d.temperature);
         });
 
-    var svg = d3.select("body").append("svg")
+    var timeAnnotation = techan.plot.axisannotation()
+        .axis(xAxis)
+        .orient('bottom')
+        .format(d3.timeFormat('%Y-%m-%d'))
+        .width(65)
+        .translate([0, height]);
+
+    var svg = d3.select("#chart").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
@@ -85,18 +85,11 @@ function drawChart(path) {
     var focus = svg.append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var context = svg.append("g")
-        .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
-
-    d3.csv("climate4.csv", function(error, data) {
-
-        color.domain(d3.keys(data[0]).filter(function(key) {
-            return key !== "date";
-        }));
-
-        data.forEach(function(d) {
-            d.date = parseDate(d.date);
-        });
+    svg.append("rect")
+        .attr("class", "pane")
+        .attr("width", width)
+        .attr("height", height)
+        .call(zoom);
 
         var sources = color.domain().map(function(name) {
             return {
@@ -127,9 +120,8 @@ function drawChart(path) {
         x2.domain(x.domain());
         y2.domain(y.domain());
 
-        var focuslineGroups = focus.selectAll("g")
-            .data(sources)
-            .enter().append("g");
+        svg.select("g.ohlc").datum(data);
+        //console.log(svg.select("g.ohlc").datum());
 
         var focuslines = focuslineGroups.append("path")
             .attr("class", "line")
@@ -150,14 +142,11 @@ function drawChart(path) {
             .attr("class", "y axis")
             .call(yAxis);
 
-        var contextlineGroups = context.selectAll("g")
-            .data(sources)
-            .enter().append("g");
-
-        var contextLines = contextlineGroups.append("path")
-            .attr("class", "line")
-            .attr("d", function(d) {
-                return line2(d.values);
+        /*svg.append('g')
+            .attr("class", "crosshair")
+            .datum({
+                x: x.domain()[80],
+                y: 67.5
             })
             .style("stroke", function(d) {
                 return color(d.name);
@@ -176,15 +165,28 @@ function drawChart(path) {
             .attr("y", -6)
             .attr("height", height2 + 7);
 
+    function zoomed() {
+        var rescaledY = d3.event.transform.rescaleY(y);
+        yAxis.scale(rescaledY);
+        ohlc.yScale(rescaledY);
 
-    });
+        // Emulates D3 behaviour, required for financetime due to secondary zoomable scale
+        x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
 
-    function brush() {
-        x.domain(brush.empty() ? x2.domain() : brush.extent());
-        focus.selectAll("path.line").attr("d", function(d) {
-            return line(d.values)
-        });
-        focus.select(".x.axis").call(xAxis);
-        focus.select(".y.axis").call(yAxis);
+        draw();
+/*
+        x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
+        y.domain(d3.event.transform.rescaleY(yInit).domain());
+
+        draw(); */
+    }
+
+    function draw() {
+        svg.select("g.ohlc").call(ohlc);
+        // using refresh method is more efficient as it does not perform any data joins
+        // Use this if underlying data is not changing
+        //svg.select("g.ohlc").call(ohlc.refresh);
+        svg.select("g.x.axis").call(xAxis);
+        svg.select("g.y.axis").call(yAxis);
     }
 }
