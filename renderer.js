@@ -44,19 +44,14 @@ function drawChart(path) {
         .yScale(y);
 
     var xAxis = d3.axisBottom(x);
-    var xTopAxis = d3.axisTop(x);
+    //var xTopAxis = d3.axisTop(x);
     var yAxis = d3.axisLeft(y);
-    var yRightAxis = d3.axisRight(y);
+    //var yRightAxis = d3.axisRight(y);
 
     var ohlcAnnotation = techan.plot.axisannotation()
         .axis(yAxis)
         .orient('left')
         .format(d3.format(',.2f'));
-
-    var ohlcRightAnnotation = techan.plot.axisannotation()
-        .axis(yRightAxis)
-        .orient('right')
-        .translate([width, 0]);
 
     var timeAnnotation = techan.plot.axisannotation()
         .axis(xAxis)
@@ -64,21 +59,6 @@ function drawChart(path) {
         .format(d3.timeFormat('%Y-%m-%d'))
         .width(65)
         .translate([0, height]);
-
-    var timeTopAnnotation = techan.plot.axisannotation()
-        .axis(xTopAxis)
-        .orient('top');
-
-    var crosshair = techan.plot.crosshair()
-        .xScale(x)
-        .yScale(y)
-        .xAnnotation([timeAnnotation, timeTopAnnotation])
-        .yAnnotation([ohlcAnnotation, ohlcRightAnnotation])
-        .on("enter", enter)
-        .on("out", out)
-        .on("move", move);
-
-
 
     var svg = d3.select("#chart").append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -103,20 +83,6 @@ function drawChart(path) {
     svg.append("g")
         .attr("class", "ohlc")
         .attr("clip-path", "url(#clip)");
-
-
-    /*svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")");
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Price ($)");*/
 
     svg.append("rect")
         .attr("class", "pane")
@@ -146,10 +112,6 @@ function drawChart(path) {
 
         svg.select("g.ohlc").datum(data);
         //console.log(svg.select("g.ohlc").datum());
-        svg.append("g")
-            .attr("class", "x axis")
-            //.attr("transform", "translate(0," + height + ")")
-            .call(xTopAxis);
 
         svg.append("g")
             .attr("class", "x axis")
@@ -160,11 +122,6 @@ function drawChart(path) {
             .attr("class", "y axis")
             //.attr("transform", "translate(" + width + ",0)")
             .call(yAxis);
-
-        svg.append("g")
-            .attr("class", "y axis")
-            .attr("transform", "translate(" + width + ",0)")
-            .call(yRightAxis);
 
         /*svg.append('g')
             .attr("class", "crosshair")
@@ -189,24 +146,19 @@ function drawChart(path) {
     });
 
     function zoomed() {
-        /*var rescaledY = d3.event.transform.rescaleY(y);
-        //var rescaledYRigth = d3.event.transform.rescaleY(y);
-
+        var rescaledY = d3.event.transform.rescaleY(y);
         yAxis.scale(rescaledY);
         ohlc.yScale(rescaledY);
-
-        //yRightAxis.scale(rescaledYRigth);
-        //ohlc.yScale(rescaledYRigth);
 
         // Emulates D3 behaviour, required for financetime due to secondary zoomable scale
         x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
 
         draw();
-*/
+/*
         x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
         y.domain(d3.event.transform.rescaleY(yInit).domain());
 
-        draw();
+        draw(); */
     }
 
     function draw() {
@@ -216,24 +168,5 @@ function drawChart(path) {
         //svg.select("g.ohlc").call(ohlc.refresh);
         svg.select("g.x.axis").call(xAxis);
         svg.select("g.y.axis").call(yAxis);
-        svg.select("g.x.axis").call(xTopAxis);
-        svg.select("g.y.axis").call(yRightAxis);
-        //svg.select("g.x.axis").call(xTopAxis);
-      //  svg.select("g.y.axis").call(yRightAxis);
-
-    }
-
-    function enter() {
-        coordsText.style("display", "inline");
-    }
-
-    function out() {
-        coordsText.style("display", "none");
-    }
-
-    function move(coords) {
-        coordsText.text(
-            timeAnnotation.format()(coords.x) + ", " + ohlcAnnotation.format()(coords.y)
-        );
     }
 }

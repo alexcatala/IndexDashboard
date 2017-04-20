@@ -48,3 +48,9 @@ rect.pane {
 .crosshair .axisannotation path {
     fill: #DDDDDD;
 }
+
+.brush .extent {
+    stroke: #fff;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
