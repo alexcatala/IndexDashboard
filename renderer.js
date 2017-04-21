@@ -6,167 +6,197 @@ const ipcRender = require('electron').ipcRenderer
 const selectDirBtn = document.getElementById('select-file-button')
 
 selectDirBtn.addEventListener('click', function(event) {
-    ipcRender.send('open-file-dialog')
+  ipcRender.send('open-file-dialog')
 })
 
 ipcRender.on('selected-file', function(event, path) {
-    drawChart(path[0])
+  drawChart(path[0])
 })
 
 function drawChart(path) {
-    var fs = require('fs');
-    var yInit, yPercentInit, zoomableInit;
+  var fs = require('fs');
+  var margin = {
+      top: 20,
+      right: 20,
+      bottom: 100,
+      left: 50
+    },
+    margin2 = {
+      top: 420,
+      right: 20,
+      bottom: 20,
+      left: 50
+    },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom,
+    height2 = 500 - margin2.top - margin2.bottom;
 
-    var margin = {
-            top: 20,
-            right: 50,
-            bottom: 30,
-            left: 50
-        },
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+  var parseDate = d3.timeParse("%Y-%m-%d");
 
-    //var parseDate = d3.timeParse("%d-%m-%y");
-    var parseDate = d3.timeParse("%Y-%m-%d");
+  var x = techan.scale.financetime()
+    .range([0, width]);
 
-    var x = techan.scale.financetime()
-        .range([0, width]);
+  var x2 = techan.scale.financetime()
+    .range([0, width]);
 
-    var y = d3.scaleLinear()
-        .range([height, 0]);
+  var y = d3.scaleLinear()
+    .range([height, 0]);
 
-    var zoom = d3.zoom()
-        .on("zoom", zoomed);
+  var y2 = d3.scaleLinear()
+    .range([height2, 0]);
 
-    var zoomableInit;
-    var ohlc = techan.plot.ohlc()
-        .xScale(x)
-        .yScale(y);
+  var brush = d3.brushX()
+    .extent([
+      [0, 0],
+      [width, height2]
+    ])
+    .on("end", brushed);
 
-    var xAxis = d3.axisBottom(x);
-    //var xTopAxis = d3.axisTop(x);
-    var yAxis = d3.axisLeft(y);
-    //var yRightAxis = d3.axisRight(y);
+  var ohlc = techan.plot.ohlc()
+    .xScale(x)
+    .yScale(y);
 
-    var ohlcAnnotation = techan.plot.axisannotation()
-        .axis(yAxis)
-        .orient('left')
-        .format(d3.format(',.2f'));
+  var ohlc2 = techan.plot.ohlc()
+    .xScale(x2)
+    .yScale(y2);
 
-    var timeAnnotation = techan.plot.axisannotation()
-        .axis(xAxis)
-        .orient('bottom')
-        .format(d3.timeFormat('%Y-%m-%d'))
-        .width(65)
-        .translate([0, height]);
+  var xAxis = d3.axisBottom(x);
 
-    var svg = d3.select("#chart").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  var xAxis2 = d3.axisBottom(x2);
 
-    var coordsText = svg.append('text')
-        .style("text-anchor", "end")
-        .attr("class", "coords")
-        .attr("x", width - 5)
-        .attr("y", 15);
+  var yAxis = d3.axisLeft(y);
 
-    svg.append("clipPath")
-        .attr("id", "clip")
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", y(1))
-        .attr("width", width)
-        .attr("height", y(0) - y(1));
+  var yAxis2 = d3.axisLeft(y2)
+    .ticks(0);
 
-    svg.append("g")
-        .attr("class", "ohlc")
-        .attr("clip-path", "url(#clip)");
+  var ohlcAnnotation = techan.plot.axisannotation()
+    .axis(yAxis)
+    .orient('left')
+    .format(d3.format(',.2f'));
 
-    svg.append("rect")
-        .attr("class", "pane")
-        .attr("width", width)
-        .attr("height", height)
-        .call(zoom);
+  var timeAnnotation = techan.plot.axisannotation()
+    .axis(xAxis)
+    .orient('bottom')
+    .format(d3.timeFormat('%Y-%m-%d'))
+    .width(65)
+    .translate([0, height]);
 
-    fs.readFile(path, 'utf8', function(err, dataString) {
-        var accessor = ohlc.accessor();
-        var data = d3.csvParse(dataString);
+  var crosshair = techan.plot.crosshair()
+    .xScale(x)
+    .yScale(y)
+    .xAnnotation(timeAnnotation)
+    .yAnnotation(ohlcAnnotation);
 
-        data = data.slice(0, data.length).map(function(d) {
-            return {
-                date: parseDate(d.Date),
-                open: +d.Open,
-                high: +d.High,
-                low: +d.Low,
-                close: +d.Close,
-                volume: +d.Volume
-            };
-        }).sort(function(a, b) {
-            return d3.ascending(accessor.d(a), accessor.d(b));
-        });
+  var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
 
-        x.domain(data.map(accessor.d));
-        y.domain(techan.scale.plot.ohlc(data, accessor).domain());
+  var focus = svg.append("g")
+    .attr("class", "focus")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        svg.select("g.ohlc").datum(data);
-        //console.log(svg.select("g.ohlc").datum());
+  focus.append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", y(1))
+    .attr("width", width)
+    .attr("height", y(0) - y(1));
 
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
+  focus.append("g")
+    .attr("class", "ohlc")
+    .attr("clip-path", "url(#clip)");
 
-        svg.append("g")
-            .attr("class", "y axis")
-            //.attr("transform", "translate(" + width + ",0)")
-            .call(yAxis);
+  focus.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")");
 
-        /*svg.append('g')
-            .attr("class", "crosshair")
-            .datum({
-                x: x.domain()[80],
-                y: 67.5
-            })
-            .call(crosshair)
-            .each(function(d) {
-                move(d);
-            }); // Display the current data
-*/
+  focus.append("g")
+    .attr("class", "y axis")
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 6)
+    .attr("dy", ".71em")
+    .style("text-anchor", "end")
+    .text("Price ($)");
 
-// Stash for zooming
-        zoomableInit = x.zoomable().domain([0, data.length]).copy(); // Zoom in a little to hide indicator preroll
-        yInit = y.copy();
-        draw();
+  focus.append('g')
+    .attr("class", "crosshair")
+    .call(crosshair);
 
-        // Associate the zoom with the scale after a domain has been applied
-        // Stash initial settings to store as baseline for zooming
-        //zoomableInit = x.zoomable().clamp(false).copy();
+  var context = svg.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+  context.append("g")
+    .attr("class", "ohlc");
+
+
+  context.append("g")
+    .attr("class", "pane");
+
+  context.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height2 + ")");
+
+  context.append("g")
+    .attr("class", "y axis")
+    .call(yAxis2);
+
+  fs.readFile(path, 'utf8', function(err, dataString) {
+    var accessor = ohlc.accessor();
+    var data = d3.csvParse(dataString);
+
+    data = data.slice(0, data.length).map(function(d) {
+      return {
+        date: parseDate(d.Date),
+        open: +d.Open,
+        high: +d.High,
+        low: +d.Low,
+        close: +d.Close,
+        volume: +d.Volume
+      };
+    }).sort(function(a, b) {
+      return d3.ascending(accessor.d(a), accessor.d(b));
     });
 
-    function zoomed() {
-        var rescaledY = d3.event.transform.rescaleY(y);
-        yAxis.scale(rescaledY);
-        ohlc.yScale(rescaledY);
 
-        // Emulates D3 behaviour, required for financetime due to secondary zoomable scale
-        x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
+    x.domain(data.map(accessor.d));
+    x2.domain(x.domain());
+    y.domain(techan.scale.plot.ohlc(data, accessor).domain());
+    y2.domain(y.domain());
+    focus.select("g.ohlc").datum(data);
+    context.select("g.ohlc").datum(data).call(ohlc2);
+    context.select("g.x.axis").call(xAxis2);
 
-        draw();
-/*
-        x.zoomable().domain(d3.event.transform.rescaleX(zoomableInit).domain());
-        y.domain(d3.event.transform.rescaleY(yInit).domain());
+    // Associate the brush with the scale and render the brush only AFTER a domain has been applied
+    context.select("g.pane").call(brush).selectAll("rect").attr("height", height2);
 
-        draw(); */
-    }
+    x.zoomable().domain(x2.zoomable().domain());
+    draw();
 
-    function draw() {
-        svg.select("g.ohlc").call(ohlc);
-        // using refresh method is more efficient as it does not perform any data joins
-        // Use this if underlying data is not changing
-        //svg.select("g.ohlc").call(ohlc.refresh);
-        svg.select("g.x.axis").call(xAxis);
-        svg.select("g.y.axis").call(yAxis);
-    }
+    //console.log("Render time: " + (Date.now()-timestart));
+  });
+
+  function brushed() {
+    var zoomable = x.zoomable(),
+      zoomable2 = x2.zoomable();
+
+    zoomable.domain(zoomable2.domain());
+    if (d3.event.selection !== null) zoomable.domain(d3.event.selection.map(zoomable.invert));
+    draw();
+  }
+
+  function draw() {
+    var ohlcSelection = focus.select("g.ohlc"),
+      data = ohlcSelection.datum();
+    y.domain(techan.scale.plot.ohlc(data.slice.apply(data, x.zoomable().domain()), ohlc.accessor()).domain());
+    ohlcSelection.call(ohlc);
+    // using refresh method is more efficient as it does not perform any data joins
+    // Use this if underlying data is not changing
+    //        svg.select("g.candlestick").call(candlestick.refresh);
+    focus.select("g.x.axis").call(xAxis);
+    focus.select("g.y.axis").call(yAxis);
+  }
+
 }
