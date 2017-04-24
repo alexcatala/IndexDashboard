@@ -3,13 +3,23 @@
 // All of the Node.js APIs are available in this process.
 const ipcRender = require('electron').ipcRenderer
 
-const selectDirBtn = document.getElementById('select-file-button')
+const selectFileChartBtn = document.getElementById('select-file-button')
+const selectDataBtn = document.getElementById('load-data-button')
 
-selectDirBtn.addEventListener('click', function(event) {
+selectFileChartBtn.addEventListener('click', function(event) {
   ipcRender.send('open-file-dialog')
 })
 
-ipcRender.on('selected-file', function(event, path) {
+selectDataBtn.addEventListener('click', function(event) {
+  ipcRender.send('load-data-button')
+})
+
+ipcRender.on('selected-chart-file', function(event, path) {
   var chart = require('./myChart.js');
   chart.drawChart(path[0])
+})
+
+ipcRender.on('selected-data-file', function(event, path) {
+  var newData = require('./myChart.js');
+  newData.appendData(path[0])
 })

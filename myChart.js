@@ -1,34 +1,35 @@
+var margin = {
+    top: 20,
+    right: 20,
+    bottom: 100,
+    left: 50
+  },
+  margin2 = {
+    top: 420,
+    right: 20,
+    bottom: 20,
+    left: 50
+  },
+  width = 960 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom,
+  height2 = 500 - margin2.top - margin2.bottom;
+
+var parseDate = d3.timeParse("%Y-%m-%d");
+
+var x = techan.scale.financetime()
+  .range([0, width]);
+
+var x2 = techan.scale.financetime()
+  .range([0, width]);
+
+var y = d3.scaleLinear()
+  .range([height, 0]);
+
+var y2 = d3.scaleLinear()
+  .range([height2, 0]);
+
 exports.drawChart = function drawChart(path) {
   var fs = require('fs');
-  var margin = {
-      top: 20,
-      right: 20,
-      bottom: 100,
-      left: 50
-    },
-    margin2 = {
-      top: 420,
-      right: 20,
-      bottom: 20,
-      left: 50
-    },
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom,
-    height2 = 500 - margin2.top - margin2.bottom;
-
-  var parseDate = d3.timeParse("%Y-%m-%d");
-
-  var x = techan.scale.financetime()
-    .range([0, width]);
-
-  var x2 = techan.scale.financetime()
-    .range([0, width]);
-
-  var y = d3.scaleLinear()
-    .range([height, 0]);
-
-  var y2 = d3.scaleLinear()
-    .range([height2, 0]);
 
   var brush = d3.brushX()
     .extent([
@@ -183,5 +184,22 @@ exports.drawChart = function drawChart(path) {
     focus.select("g.x.axis").call(xAxis);
     focus.select("g.y.axis").call(yAxis);
   }
+
+}
+
+exports.appendData = function drawData(path){
+  var fs = require('fs');
+
+var focus = d3.select("svg.g.focus")
+
+var close = techan.plot.close()
+  .xScale(x)
+  .yScale(y);
+fs.readFile(path, 'utf8', function(err, dataString) {
+      var accessor = close.accessor();
+      var data = d3.csvParse(dataString);
+      console.log(data);
+      //focus.selectAll("g.close").datum(data).call(close);
+});
 
 }
