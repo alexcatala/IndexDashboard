@@ -58,6 +58,7 @@ def N_benefits(n, filename):
 def writeCSV(data, filename):
     with open(filename, "w", newline='') as f:
         writer = csv.writer(f, delimiter=',')
+        writer.writerow(["Date", "Close"])
         writer.writerows(data)
 
 

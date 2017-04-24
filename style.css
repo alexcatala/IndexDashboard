@@ -23,11 +23,12 @@ path.volume {
   fill: #EEEEEE;
 }
 
+
 path.line {
-  fill: none;
-  stroke: #BF5FFF;
-  stroke-width: 1;
-}
+        fill: none;
+        stroke: #000000;
+        stroke-width: 1;
+    }
 
 .extent {
   stroke: #fff;

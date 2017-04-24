@@ -28,6 +28,10 @@ var y = d3.scaleLinear()
 var y2 = d3.scaleLinear()
   .range([height2, 0]);
 
+  var closeInd = techan.plot.close()
+    .xScale(x)
+    .yScale(y);
+
 exports.drawChart = function drawChart(path) {
   var fs = require('fs');
 
@@ -178,6 +182,7 @@ exports.drawChart = function drawChart(path) {
       data = ohlcSelection.datum();
     y.domain(techan.scale.plot.ohlc(data.slice.apply(data, x.zoomable().domain()), ohlc.accessor()).domain());
     ohlcSelection.call(ohlc);
+    focus.select("g.close").call(closeInd);
     // using refresh method is more efficient as it does not perform any data joins
     // Use this if underlying data is not changing
     //        svg.select("g.candlestick").call(candlestick.refresh);
@@ -187,19 +192,28 @@ exports.drawChart = function drawChart(path) {
 
 }
 
-exports.appendData = function drawData(path){
+exports.appendData = function drawData(path) {
   var fs = require('fs');
 
-var focus = d3.select("svg.g.focus")
+  var focus = d3.select("g.focus")
 
-var close = techan.plot.close()
-  .xScale(x)
-  .yScale(y);
-fs.readFile(path, 'utf8', function(err, dataString) {
-      var accessor = close.accessor();
-      var data = d3.csvParse(dataString);
-      console.log(data);
-      //focus.selectAll("g.close").datum(data).call(close);
-});
+  fs.readFile(path, 'utf8', function(err, dataString) {
+    var accessor = closeInd.accessor();
+    var data = d3.csvParse(dataString);
+    data = data.slice(0, data.length).map(function(d) {
+      return {
+        date: parseDate(d.Date),
+        close: +d.Close,
+      };
+    }).sort(function(a, b) {
+      return d3.ascending(accessor.d(a), accessor.d(b));
+    });
+        console.log(data);
+    focus.append("g")
+      .attr("class", "close");
+
+
+    focus.selectAll("g.close").datum(data).call(closeInd);
+  });
 
 }
