@@ -7,7 +7,7 @@ import sys
 #########################################
 # Example:
 #   python closeAverage.py 20 IBEX.csv
-
+    
 CLOSE_IND = 4
 DATE_IND = 0
 
