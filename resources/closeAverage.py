@@ -1,6 +1,13 @@
 import csv
 import sys
 
+# Usage: Arguments:
+#   - Last N days for the average
+#   - Filename of the indexMarket data
+#########################################
+# Example:
+#   python closeAverage.py 20 IBEX.csv
+
 CLOSE_IND = 4
 DATE_IND = 0
 
@@ -21,37 +28,43 @@ def N_benefits(n, filename):
         n_mean = []
         # Initialize n_mean with the n first elements
         for i in range(1, n + 1):
-            n_mean.append(float(data[i][CLOSE_IND]))
-
+            try:
+                n_mean.append(float(data[i][CLOSE_IND]))
+            except:
+                print('nullValues')
         state = 'waiting'
         last_close_buy = 0.0
         benefits = 0.0
         counter = 0
         mean_list = []
         for i in reversed(range(n, len(data) - 1)): # Start at n+1 element
-            close = float(data[i][CLOSE_IND])
-            next_day_close = float(data[i + 1][CLOSE_IND])
-            mean = sum(n_mean) / n
-            mean_list.append((data[i][DATE_IND], mean))
-            # if (data[i][0] == '2017-02-10'): # For debug
-            #    print(state, mean, close)
-            #    print(n_mean)
-            if (state == 'waiting' and close > mean):
-                if(next_day_close >= mean):
-                    counter += 1
-                    state = 'buy'
-                    last_close_buy = next_day_close
-                    benefits -= next_day_close * float(0.002)
+            try:
+                close = float(data[i][CLOSE_IND])
+                next_day_close = float(data[i + 1][CLOSE_IND])
+                mean = sum(n_mean) / n
+                mean_list.append((data[i][DATE_IND], mean))
+                # if (data[i][0] == '2017-02-10'): # For debug
+                #    print(state, mean, close)
+                #    print(n_mean)
+                if (state == 'waiting' and close > mean):
+                    if(next_day_close >= mean):
+                        counter += 1
+                        state = 'buy'
+                        last_close_buy = next_day_close
+                        benefits -= next_day_close * float(0.002)
 
-            elif(state == 'buy' and close < mean):
-                try:
-                    benefits += next_day_close - last_close_buy
-                except Exception as e:
-                    print('sell last day')
-                state = 'waiting'
-                last_close_buy = 0.0
-            n_mean.pop(0)
-            n_mean.append(close)
+                elif(state == 'buy' and close < mean):
+                    try:
+                        benefits += next_day_close - last_close_buy
+                    except Exception as e:
+                        print('sell last day')
+                    state = 'waiting'
+                    last_close_buy = 0.0
+                n_mean.pop(0)
+                n_mean.append(close)
+            except Exception as e:
+                print('null values')
+
         return benefits, counter, mean_list
 
 

@@ -208,7 +208,6 @@ exports.appendData = function drawData(path) {
     }).sort(function(a, b) {
       return d3.ascending(accessor.d(a), accessor.d(b));
     });
-        console.log(data);
     focus.append("g")
       .attr("class", "close");
 

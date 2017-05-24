@@ -101,30 +101,23 @@
           </div>
         </div>
       </nav>
-
-
       <div class="content">
-        <div class="container-fluid">
-          <div class="row">
 
-            <div class="jumbotron">
-              <div id="chart"> </div>
-            </div>
-            <button type="button" id="select-file-button">Load Chart</button>
-            <button type="button" id="load-data-button">Load Data</button>
-          </div>
-        </div>
+        <h2 style="color: #5e9ca0;">New datasets</h2>
+        <h4>You can download close index historical data from the yahoo finance web. Search for an specific index (i.e. DAX or ibex35) and download data as csv.</h4>
+        <button id="new-data-button"> Go! </button>
+
+        <h2 style="color: #5e9ca0;">Obtain close index average data</h2>
+        <h4>You can obtain custom data from the yahoo index market historical information. Here you have a python script as an example.</h4>
       </div>
-
-
       <footer class="footer">
         <div class="container-fluid">
           <nav class="pull-left">
             <ul>
               <li>
                 <a href="#">
-                                Home
-                            </a>
+                          Home
+                      </a>
               </li>
 
             </ul>
@@ -139,7 +132,7 @@
   </div>
 
   <!-- Bootstrap core JavaScript
-    ================================================== -->
+================================================== -->
   <!-- Placed at the end of the document so the pages load faster -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </body>
@@ -161,10 +154,13 @@
 
 <!-- Light Bootstrap Table DEMO methods, don't include it in your project! -->
 <script src="assets/js/demo.js"></script>
-
 <script>
   // You can also require other files to run in this process
-  require('./renderer.js')
-</script>
+  const shell = require('electron').shell
 
+  let selectNewDataBtn = document.getElementById('new-data-button');
+  selectNewDataBtn.addEventListener('click', function(event) {
+    shell.openExternal('https://finance.yahoo.com/quote/%5EIBEX/history?p=^IBEX')
+  });
+</script>
 </html>
