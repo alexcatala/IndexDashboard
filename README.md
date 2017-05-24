@@ -8,4 +8,4 @@ This is a minimal Electron application based on the [Quick Start Guide](http://e
 You can download the application binaries [here](https://github.com/alexcatala/IndexDashboard/releases).
 
 ## Run
-Extract the content of the previous downloaded file and the run the electron file.
+Extract the content of the previous downloaded file and then run the electron file.
